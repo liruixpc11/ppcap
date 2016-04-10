@@ -53,11 +53,13 @@ public final class StructureParserFactory {
     }
 
     public <T> StructureParser<T> createParser(Class<T> tClass) {
-        if (!tClass.isAnnotationPresent(Structure.class)) {
+        Structure structureAnnotation = tClass.getAnnotation(Structure.class);
+        if (structureAnnotation == null) {
             throw new IllegalArgumentException("class " + String.valueOf(tClass) + " without " + Structure.class.getSimpleName() + " annotation");
         }
 
         StructureParser<T> parser = new StructureParser<>(tClass);
+        parser.setBigEndian(structureAnnotation.bigEndian());
         for (Field field : tClass.getDeclaredFields()) {
             lab.cadl.lirui.ppcap.core.io.annotations.Field fieldAnnotation = field.getAnnotation(lab.cadl.lirui.ppcap.core.io.annotations.Field.class);
             field.setAccessible(true);
