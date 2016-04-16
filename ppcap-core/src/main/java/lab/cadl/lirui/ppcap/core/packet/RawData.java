@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
  *
  */
 public interface RawData {
-    int length();
     ByteBuffer rawData();
+    int begin();
+    int length();
 }

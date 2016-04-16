@@ -3,6 +3,7 @@ package lab.cadl.lirui.ppcap.core;
 import lab.cadl.lirui.ppcap.core.io.file.ChannelPcapFileReader;
 import lab.cadl.lirui.ppcap.core.io.file.PcapFileReader;
 import lab.cadl.lirui.ppcap.core.io.file.StreamPcapFileReader;
+import lab.cadl.lirui.ppcap.core.packet.Packet;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -102,7 +103,8 @@ public class Test {
         return test("read and parse pcap by stream " + pcapFile, () -> {
             try (PcapFileReader reader = new StreamPcapFileReader(pcapFile)) {
                 while (reader.hasNext()) {
-                    reader.next();
+                    Packet packet = reader.next();
+                    System.out.println(packet.payload().header());
                 }
             }
         }, count);

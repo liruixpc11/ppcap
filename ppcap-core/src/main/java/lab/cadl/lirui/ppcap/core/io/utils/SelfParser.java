@@ -13,6 +13,7 @@ public interface SelfParser<T> {
      * @param buffer buffer
      * @param begin begin index of buffer
      * @param length buffer length
+     * @return consumed byte count
      */
-    void parse(StructureParser<T> parser, ByteBuffer buffer, int begin, int length);
+    int parse(StructureParser<T> parser, ByteBuffer buffer, int begin, int length);
 }

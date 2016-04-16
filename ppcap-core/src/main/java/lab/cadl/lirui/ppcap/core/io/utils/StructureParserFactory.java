@@ -1,7 +1,10 @@
 package lab.cadl.lirui.ppcap.core.io.utils;
 
 import lab.cadl.lirui.ppcap.core.io.annotations.Structure;
+import lab.cadl.lirui.ppcap.core.utils.Utils;
 
+import javax.swing.*;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -39,7 +42,8 @@ public final class StructureParserFactory {
         return instance;
     }
 
-    private StructureParserFactory() {}
+    private StructureParserFactory() {
+    }
 
     @SuppressWarnings("unchecked")
     public <T> StructureParser<T> getParser(Class<T> tClass) {
@@ -62,8 +66,10 @@ public final class StructureParserFactory {
         parser.setBigEndian(structureAnnotation.bigEndian());
         for (Field field : tClass.getDeclaredFields()) {
             lab.cadl.lirui.ppcap.core.io.annotations.Field fieldAnnotation = field.getAnnotation(lab.cadl.lirui.ppcap.core.io.annotations.Field.class);
-            field.setAccessible(true);
-            parser.field(parseField(parser.length(), field, fieldAnnotation));
+            if (fieldAnnotation != null) {
+                field.setAccessible(true);
+                parser.field(parseField(parser.length(), field, fieldAnnotation));
+            }
         }
 
         return parser;
@@ -71,7 +77,38 @@ public final class StructureParserFactory {
 
     private <T> StructureField<T> parseField(int currentIndex, Field field, lab.cadl.lirui.ppcap.core.io.annotations.Field fieldAnnotation) {
         int begin = adjust(fieldAnnotation.begin(), currentIndex);
-        if (isPrimeClass(field.getType())) {
+        if (field.getType().isArray()) {
+            if (fieldAnnotation.length() <= 0) {
+                throw new IllegalArgumentException("field length of array type must larger than 0");
+            }
+
+            Class<?> elementClass =  field.getType().getComponentType();
+            if (isPrimeClass(elementClass)) {
+                int size = fieldAnnotation.length();
+                final PrimeEntry entry = primeClasses.get(elementClass);
+                int length = fieldAnnotation.length() * entry.defaultLength;
+                return new AbstractStructureField<T>(begin, length) {
+                    @Override
+                    protected void parseTo(T structure, ByteBuffer buffer, int sBegin) {
+                        Object array = Array.newInstance(elementClass, size);
+                        for (int i = 0; i < size; i++) {
+                            Array.set(array, i, entry.reader.read(buffer, begin + i * entry.defaultLength));
+                        }
+
+                        try {
+                            field.set(structure, array);
+                        } catch (IllegalAccessException e) {
+                            throw Utils.wrap(e);
+                        }
+                    }
+                };
+            } else {
+                StructureParser elementParser = getParser(elementClass);
+                int size = fieldAnnotation.length();
+                int length = fieldAnnotation.length() * elementParser.length();
+                return new ArrayStructureField<>(begin, length, size, field, elementParser);
+            }
+        } else if (isPrimeClass(field.getType())) {
             PrimeEntry entry = primeClasses.get(field.getType());
             int length = adjust(fieldAnnotation.length(), entry.defaultLength);
             return new PrimeStructureField<>(begin, length, (structure, buffer, base) -> field.set(structure, entry.reader.read(buffer, base + begin)));
@@ -120,5 +157,9 @@ public final class StructureParserFactory {
             this.defaultLength = defaultLength;
             this.reader = reader;
         }
+    }
+
+    public static <T> StructureParser<T> p(Class<T> tClass) {
+        return getInstance().getParser(tClass);
     }
 }

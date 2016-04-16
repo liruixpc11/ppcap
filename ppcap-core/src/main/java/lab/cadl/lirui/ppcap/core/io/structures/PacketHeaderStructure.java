@@ -4,6 +4,7 @@ import lab.cadl.lirui.ppcap.core.io.annotations.Field;
 import lab.cadl.lirui.ppcap.core.io.annotations.Structure;
 import lab.cadl.lirui.ppcap.core.io.utils.SelfParser;
 import lab.cadl.lirui.ppcap.core.io.utils.StructureParser;
+import lab.cadl.lirui.ppcap.core.packet.AbstractHeader;
 import lab.cadl.lirui.ppcap.core.packet.EmptyHeader;
 import lab.cadl.lirui.ppcap.core.packet.Header;
 
@@ -13,7 +14,7 @@ import java.nio.ByteBuffer;
  *
  */
 @Structure
-public class PacketHeaderStructure extends EmptyHeader implements SelfParser<PacketHeaderStructure> {
+public class PacketHeaderStructure extends AbstractHeader implements SelfParser<PacketHeaderStructure> {
     @Field
     private int seconds;
     @Field
@@ -50,10 +51,16 @@ public class PacketHeaderStructure extends EmptyHeader implements SelfParser<Pac
     }
 
     @Override
-    public void parse(StructureParser<PacketHeaderStructure> parser, ByteBuffer buffer, int begin, int length) {
+    public int parse(StructureParser<PacketHeaderStructure> parser, ByteBuffer buffer, int begin, int length) {
         this.seconds = buffer.getInt(begin);
         this.microSeconds = buffer.getInt(begin + 4);
         this.includedLength = buffer.getInt(begin + 8);
         this.actualLength = buffer.getInt(begin + 12);
+
+        setRawData(buffer);
+        setBegin(begin);
+        setLength(length);
+
+        return parser.length();
     }
 }
