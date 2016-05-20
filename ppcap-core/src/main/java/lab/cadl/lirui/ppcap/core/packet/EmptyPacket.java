@@ -10,6 +10,11 @@ public class EmptyPacket extends EmptyRawData implements Packet {
         return instance;
     }
 
+    @Override
+    public String type() {
+        return "Empty";
+    }
+
     public Header header() {
         return EmptyHeader.getInstance();
     }

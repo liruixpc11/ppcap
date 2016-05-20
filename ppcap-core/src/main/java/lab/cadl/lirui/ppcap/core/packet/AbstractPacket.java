@@ -15,6 +15,16 @@ public abstract class AbstractPacket<THeader extends Header> extends AbstractRaw
     }
 
     @Override
+    public String type() {
+        String name = getClass().getSimpleName();
+        if (name.endsWith("Packet")) {
+            return name.substring(0, name.length() - 6);
+        } else {
+            return name;
+        }
+    }
+
+    @Override
     public THeader header() {
         return header;
     }

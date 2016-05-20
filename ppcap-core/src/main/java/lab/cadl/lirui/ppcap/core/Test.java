@@ -24,7 +24,7 @@ public class Test {
     private int a;
 
     public static void main(String[] args) throws Exception {
-        testPcapFileReadUseStream(100);
+        testPcapFileReadUseStream(10);
 //        testPcapFileRead(10);
 //        testRawFileReadUseStream(100);
 //        testRawFileRead(10);
@@ -104,7 +104,7 @@ public class Test {
             try (PcapFileReader reader = new StreamPcapFileReader(pcapFile)) {
                 while (reader.hasNext()) {
                     Packet packet = reader.next();
-                    System.out.println(packet.payload().header());
+                    packet.payload().header();
                 }
             }
         }, count);
